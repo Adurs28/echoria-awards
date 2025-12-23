@@ -1,0 +1,20 @@
+{
+  "name": "echoria-awards",
+  "version": "1.0.0",
+  "description": "Echoria Discord Awards – голосование",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "discord-oauth2": "^2.12.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "sqlite3": "5.1.7"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
