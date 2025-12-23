@@ -42,6 +42,8 @@ app.get('/', (req, res) => res.render('index', { user: req.session.user }));
 app.get('/login', (req, res) => {
   // Проверка: если REDIRECT_URI не задан, будет ошибка
   if(!REDIRECT_URI) return res.send("Ошибка: REDIRECT_URI не настроен в панели Render");
+
+  const manualRedirect = "https://echoria-awards.onrender.com/auth/callback";
   
   const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify+guilds`;
   res.redirect(url);
