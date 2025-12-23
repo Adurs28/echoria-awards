@@ -3,7 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const DiscordOauth2 = require('discord-oauth2');
 const sqlite3 = require('sqlite3').verbose();
-const path = require('path'); // Исправлено: был require('express')
+const path = require('path');
 
 const app = express();
 const oauth = new DiscordOauth2();
@@ -13,8 +13,6 @@ app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Настройка сессий (на Render secure должен быть true, если используешь https, 
-// но для начала оставим false для тестов)
 app.use(session({
   secret: process.env.SESSION_SECRET || 'super-secret-key',
   resave: false,
@@ -34,16 +32,13 @@ db.run(`CREATE TABLE IF NOT EXISTS votes_v2 (
 // Переменные окружения из панели Render
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = process.env.REDIRECT_URI; // Должен быть https://echoria-awards.onrender.com/auth/callback
+const REDIRECT_URI = process.env.REDIRECT_URI || 'http://localhost:3000/auth/callback';
 const GUILD_ID = process.env.GUILD_ID;
 
 app.get('/', (req, res) => res.render('index', { user: req.session.user }));
 
 app.get('/login', (req, res) => {
-  // Проверка: если REDIRECT_URI не задан, будет ошибка
-  if(!REDIRECT_URI) return res.send("Ошибка: REDIRECT_URI не настроен в панели Render");
-
-  const manualRedirect = "https://echoria-awards.onrender.com/auth/callback";
+  if(!REDIRECT_URI) return res.send("Ошибка: REDIRECT_URI не настроен. Проверьте консоль.");
   
   const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify+guilds`;
   res.redirect(url);
@@ -95,4 +90,12 @@ app.get('/logout', (req, res) => {
 
 // Порт для Render
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Сервер запущен на порту ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
+  console.log(`🔗 Используемый REDIRECT_URI: ${REDIRECT_URI}`);
+  if (!CLIENT_ID || !CLIENT_SECRET) {
+    console.error("❌ ОШИБКА: Не заданы CLIENT_ID или CLIENT_SECRET в файле .env");
+  } else {
+    console.log("✅ CLIENT_ID и CLIENT_SECRET загружены");
+  }
+});
