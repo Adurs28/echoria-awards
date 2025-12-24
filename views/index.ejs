@@ -191,11 +191,13 @@
         body: params
       }).then(response => {
           if (response.ok) {
-            showMessage('Спасибо за участие в Echoria Awards 2025!', '✅', '/thanks');
+            step2.style.display = 'none';
+            showMessage('Спасибо за участие в Echoria Awards 2025!', '✅');
           } else if (response.status === 401) {
             showMessage('Ошибка: Вы не авторизованы!', '🔒', '/login');
           } else if (response.status === 409) {
-            showMessage('Вы уже голосовали в этой номинации.', '❌', '/thanks');
+            step2.style.display = 'none';
+            showMessage('Вы уже голосовали в этой номинации.', '❌');
           }
       }).catch(err => {
           console.error(err);
