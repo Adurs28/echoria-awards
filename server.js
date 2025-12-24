@@ -36,6 +36,7 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 // Если переменная REDIRECT_URI не задана (локальный запуск), используем localhost
 const REDIRECT_URI = process.env.REDIRECT_URI || 'http://localhost:3000/auth/callback';
 const GUILD_ID = process.env.GUILD_ID;
+const ADMIN_ID = process.env.ADMIN_ID;
 
 app.get('/', (req, res) => res.render('index', { user: req.session.user }));
 
@@ -81,6 +82,20 @@ app.post('/vote', (req, res) => {
   db.run(`INSERT INTO votes_v2 (user_id, nomination, choice) VALUES (?, ?, ?)`, [user_id, nomination, choice], function (err) {
     if (err) return res.status(409).send('❌ Ты уже голосовал в этой номинации.');
     res.sendStatus(200);
+  });
+});
+
+app.get('/admin', (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+  
+  // Проверка: если ID пользователя не совпадает с ADMIN_ID, доступ запрещен
+  if (ADMIN_ID && req.session.user.id !== ADMIN_ID) {
+    return res.status(403).send('❌ Доступ запрещен. Вы не администратор.');
+  }
+
+  db.all(`SELECT nomination, choice, COUNT(*) as count FROM votes_v2 GROUP BY nomination, choice ORDER BY nomination, count DESC`, (err, rows) => {
+    if (err) return res.status(500).send(err.message);
+    res.render('admin', { rows });
   });
 });
 
