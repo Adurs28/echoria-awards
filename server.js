@@ -80,8 +80,8 @@ app.post('/vote', (req, res) => {
   const user_id = req.session.user.id;
   
   db.run(`INSERT INTO votes_v2 (user_id, nomination, choice) VALUES (?, ?, ?)`, [user_id, nomination, choice], function (err) {
-    if (err) return res.status(409).send('❌ Ты уже голосовал в этой номинации.');
-    res.sendStatus(200);
+    if (err) return res.status(409).send('❌ Вы уже голосовали в этой номинации.');
+    res.send('✅ Спасибо за участие в Echoria Awards 2025!');
   });
 });
 

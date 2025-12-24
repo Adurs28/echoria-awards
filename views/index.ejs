@@ -130,13 +130,36 @@
     </div>
   </div>
 
+  <!-- Кастомное модальное окно для сообщений (вместо системного alert) -->
+  <div class="modal-overlay" id="messageModal">
+    <div class="modal-box">
+      <div id="msgIcon" style="font-size: 4rem; margin-bottom: 15px;"></div>
+      <h4 id="msgText" class="mb-4"></h4>
+      <button id="msgBtn" class="btn btn-light px-5">OK</button>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script>
     AOS.init();
     const overlay = document.getElementById('modalOverlay');
     const step2 = document.getElementById('modalStep2');
     const openBtn = document.getElementById('openModal');
+    const msgModal = document.getElementById('messageModal');
+    const msgIcon = document.getElementById('msgIcon');
+    const msgText = document.getElementById('msgText');
+    const msgBtn = document.getElementById('msgBtn');
     let currentNomination = '';
+
+    function showMessage(text, icon, redirectUrl) {
+      msgText.textContent = text;
+      msgIcon.textContent = icon;
+      msgModal.style.display = 'flex';
+      msgBtn.onclick = () => {
+        msgModal.style.display = 'none';
+        if (redirectUrl) window.location.href = redirectUrl;
+      };
+    }
 
     openBtn.onclick = () => overlay.style.display = 'flex';
     document.getElementById('cancelBtn').onclick = () => overlay.style.display = 'none';
@@ -168,17 +191,15 @@
         body: params
       }).then(response => {
           if (response.ok) {
-            window.location.href = '/thanks';
+            showMessage('Спасибо за участие в Echoria Awards 2025!', '✅', '/thanks');
           } else if (response.status === 401) {
-            alert('Ошибка: Вы не авторизованы!');
-            window.location.href = '/login';
+            showMessage('Ошибка: Вы не авторизованы!', '🔒', '/login');
           } else if (response.status === 409) {
-            alert('Вы уже голосовали в этой номинации!');
-            window.location.href = '/thanks';
+            showMessage('Вы уже голосовали в этой номинации.', '❌', '/thanks');
           }
       }).catch(err => {
           console.error(err);
-          alert('Ошибка соединения');
+          showMessage('Ошибка соединения', '⚠️');
       });
     };
   </script>
