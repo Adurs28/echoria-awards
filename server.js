@@ -10,6 +10,7 @@ const oauth = new DiscordOauth2();
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
+app.set('trust proxy', 1); // Разрешаем работу через прокси (ngrok/localtunnel)
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -32,6 +33,7 @@ db.run(`CREATE TABLE IF NOT EXISTS votes_v2 (
 // Переменные окружения из панели Render
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
+// Если переменная REDIRECT_URI не задана (локальный запуск), используем localhost
 const REDIRECT_URI = process.env.REDIRECT_URI || 'http://localhost:3000/auth/callback';
 const GUILD_ID = process.env.GUILD_ID;
 
@@ -93,6 +95,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
   console.log(`🔗 Используемый REDIRECT_URI: ${REDIRECT_URI}`);
+  console.log(`⚠️  Убедись, что этот URL добавлен в Discord Developer Portal -> OAuth2 -> Redirects`);
   if (!CLIENT_ID || !CLIENT_SECRET) {
     console.error("❌ ОШИБКА: Не заданы CLIENT_ID или CLIENT_SECRET в файле .env");
   } else {

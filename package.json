@@ -4,7 +4,8 @@
   "description": "Echoria Discord Awards – голосование",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "share": "npx localtunnel --port 3000"
   },
   "dependencies": {
     "discord-oauth2": "^2.12.0",
