@@ -326,6 +326,9 @@ app.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/'));
 });
 
+// Маршрут для UptimeRobot (чтобы сайт не засыпал)
+app.get('/ping', (req, res) => res.status(200).send('OK'));
+
 // Порт для Render
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
@@ -336,5 +339,17 @@ app.listen(PORT, () => {
     console.error("❌ ОШИБКА: Не заданы CLIENT_ID или CLIENT_SECRET в файле .env");
   } else {
     console.log("✅ CLIENT_ID и CLIENT_SECRET загружены");
+    
+    // Автоматический само-пинг (дополнительная страховка от засыпания)
+    if (REDIRECT_URI && !REDIRECT_URI.includes('localhost')) {
+      const baseUrl = REDIRECT_URI.split('/auth/callback')[0];
+      console.log(`⏰ Запуск системы анти-сна для: ${baseUrl}`);
+      
+      setInterval(() => {
+        fetch(`${baseUrl}/ping`)
+          .then(res => { /* Успешный пинг, ничего не пишем в лог чтобы не спамить */ })
+          .catch(err => console.error(`⚠️ Ошибка само-пинга: ${err.message}`));
+      }, 10 * 60 * 1000); // Каждые 10 минут
+    }
   }
 });
