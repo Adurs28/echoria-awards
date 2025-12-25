@@ -62,6 +62,11 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 
 client.once(Events.ClientReady, () => {
   console.log(`🤖 Бот запущен как ${client.user.tag}`);
+  if (LEADERBOARD_CHANNEL_ID) {
+    console.log(`📝 Бот настроен на канал ID: ${LEADERBOARD_CHANNEL_ID}`);
+  } else {
+    console.log(`⚠️ ID канала для таблицы не задан!`);
+  }
   updateDiscordLeaderboard(); // Обновляем таблицу при запуске
 });
 
@@ -75,6 +80,22 @@ if (DISCORD_BOT_TOKEN) {
 client.on('interactionCreate', async interaction => {
   if (!interaction.isButton()) return;
   
+  // Обработка кнопки сброса голосов
+  if (interaction.customId === 'reset_votes') {
+    if (ADMIN_ID && interaction.user.id !== ADMIN_ID) {
+      return interaction.reply({ content: '❌ У вас нет прав на это действие.', ephemeral: true });
+    }
+
+    db.run(`DELETE FROM votes_v2`, function(err) {
+      if (err) {
+        return interaction.reply({ content: `❌ Ошибка при очистке БД: ${err.message}`, ephemeral: true });
+      }
+      updateDiscordLeaderboard();
+      interaction.reply({ content: '✅ Все голоса были успешно удалены. Таблица лидеров обновлена.', ephemeral: true });
+    });
+    return;
+  }
+
   // Проверяем, что это наши кнопки (формат id: lb_prev_0 или lb_next_2)
   const [prefix, action, pageStr] = interaction.customId.split('_');
   if (prefix !== 'lb') return;
@@ -85,6 +106,21 @@ client.on('interactionCreate', async interaction => {
 
 // Очистка чата: удаляем сообщения пользователей в канале лидерборда
 client.on('messageCreate', async message => {
+  // Команда для вызова кнопки сброса (только для админа)
+  if (message.content === '!reset') {
+    if (ADMIN_ID && message.author.id !== ADMIN_ID) return;
+
+    const row = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('reset_votes')
+          .setLabel('🗑️ Сбросить ВСЕ голоса')
+          .setStyle(ButtonStyle.Danger)
+      );
+    
+    await message.reply({ content: '⚠️ **Внимание!** Вы собираетесь удалить **ВСЕ** голоса из базы данных. Это действие необратимо.', components: [row] });
+  }
+
   if (LEADERBOARD_CHANNEL_ID && message.channel.id === LEADERBOARD_CHANNEL_ID && !message.author.bot) {
     try {
       await message.delete();
@@ -170,7 +206,7 @@ async function sendLeaderboardPage(pageIndex, interaction = null) {
         if (lastBotMsg) await lastBotMsg.edit(payload);
         else await channel.send(payload);
       } catch (error) {
-        console.error("Ошибка отправки в Discord:", error);
+        console.error(`❌ Ошибка отправки в Discord (Канал: ${LEADERBOARD_CHANNEL_ID}):`, error.message);
       }
     }
   });
