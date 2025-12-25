@@ -3,7 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const DiscordOauth2 = require('discord-oauth2');
 const sqlite3 = require('sqlite3').verbose();
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events } = require('discord.js');
 const path = require('path');
 
 const app = express();
@@ -60,7 +60,7 @@ const NOMINATIONS = [
 // --- Настройка Discord Бота ---
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
-client.once('ready', () => {
+client.once(Events.ClientReady, () => {
   console.log(`🤖 Бот запущен как ${client.user.tag}`);
   updateDiscordLeaderboard(); // Обновляем таблицу при запуске
 });
@@ -195,8 +195,7 @@ async function updateDiscordLeaderboard() {
     
     sendLeaderboardPage(pageIndex);
   } catch (error) {
-    console.error("Ошибка обновления таблицы:", error);
-    sendLeaderboardPage(0);
+    console.error("Ошибка обновления таблицы (проверьте права бота):", error.message);
   }
 }
 
