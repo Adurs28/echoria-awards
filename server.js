@@ -3,7 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const DiscordOauth2 = require('discord-oauth2');
 const sqlite3 = require('sqlite3').verbose();
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, MessageFlags } = require('discord.js');
 const path = require('path');
 
 const app = express();
@@ -85,7 +85,7 @@ client.on('interactionCreate', async interaction => {
   // Запрос подтверждения сброса (кнопка на панели)
   if (interaction.customId === 'request_reset') {
     if (ADMIN_ID && interaction.user.id !== ADMIN_ID) {
-      return interaction.reply({ content: '❌ У вас нет прав на это действие.', ephemeral: true });
+      return interaction.reply({ content: '❌ У вас нет прав на это действие.', flags: MessageFlags.Ephemeral });
     }
     
     const row = new ActionRowBuilder()
@@ -96,21 +96,21 @@ client.on('interactionCreate', async interaction => {
           .setStyle(ButtonStyle.Danger)
       );
       
-    return interaction.reply({ content: '⚠️ **Вы уверены?** Это удалит ВСЕ голоса безвозвратно.', components: [row], ephemeral: true });
+    return interaction.reply({ content: '⚠️ **Вы уверены?** Это удалит ВСЕ голоса безвозвратно.', components: [row], flags: MessageFlags.Ephemeral });
   }
 
   // Обработка кнопки сброса голосов
   if (interaction.customId === 'reset_votes') {
     if (ADMIN_ID && interaction.user.id !== ADMIN_ID) {
-      return interaction.reply({ content: '❌ У вас нет прав на это действие.', ephemeral: true });
+      return interaction.reply({ content: '❌ У вас нет прав на это действие.', flags: MessageFlags.Ephemeral });
     }
 
     db.run(`DELETE FROM votes_v2`, function(err) {
       if (err) {
-        return interaction.reply({ content: `❌ Ошибка при очистке БД: ${err.message}`, ephemeral: true });
+        return interaction.reply({ content: `❌ Ошибка при очистке БД: ${err.message}`, flags: MessageFlags.Ephemeral });
       }
       updateDiscordLeaderboard();
-      interaction.reply({ content: '✅ Все голоса были успешно удалены. Таблица лидеров обновлена.', ephemeral: true });
+      interaction.reply({ content: '✅ Все голоса были успешно удалены. Таблица лидеров обновлена.', flags: MessageFlags.Ephemeral });
     });
     return;
   }
