@@ -58,7 +58,7 @@ const NOMINATIONS = [
 ];
 
 // --- Настройка Discord Бота ---
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 client.once(Events.ClientReady, () => {
   console.log(`🤖 Бот запущен как ${client.user.tag}`);
@@ -80,6 +80,23 @@ if (DISCORD_BOT_TOKEN) {
 client.on('interactionCreate', async interaction => {
   if (!interaction.isButton()) return;
   
+  // Запрос подтверждения сброса (кнопка на панели)
+  if (interaction.customId === 'request_reset') {
+    if (ADMIN_ID && interaction.user.id !== ADMIN_ID) {
+      return interaction.reply({ content: '❌ У вас нет прав на это действие.', ephemeral: true });
+    }
+    
+    const row = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('reset_votes')
+          .setLabel('💣 Подтвердить удаление')
+          .setStyle(ButtonStyle.Danger)
+      );
+      
+    return interaction.reply({ content: '⚠️ **Вы уверены?** Это удалит ВСЕ голоса безвозвратно.', components: [row], ephemeral: true });
+  }
+
   // Обработка кнопки сброса голосов
   if (interaction.customId === 'reset_votes') {
     if (ADMIN_ID && interaction.user.id !== ADMIN_ID) {
@@ -186,7 +203,11 @@ async function sendLeaderboardPage(pageIndex, interaction = null) {
           .setCustomId(`lb_next_${pageIndex + 1}`)
           .setLabel('Вперед ➡️')
           .setStyle(ButtonStyle.Primary)
-          .setDisabled(pageIndex === NOMINATIONS.length - 1)
+          .setDisabled(pageIndex === NOMINATIONS.length - 1),
+        new ButtonBuilder()
+          .setCustomId('request_reset')
+          .setLabel('🗑️ Сброс')
+          .setStyle(ButtonStyle.Secondary)
       );
 
     const payload = { embeds: [embed], components: [row] };
